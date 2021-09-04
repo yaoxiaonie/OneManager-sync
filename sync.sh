@@ -15,7 +15,7 @@ function restore() {
     if [ "$1" = "-c" ]; then
         chmod "$2" "$3"
     elif [ "$1" = "-l" ]; then
-        rm -rf "$2"
+        rm -rf "$3"
         ln -s "$2" "$3"
     fi
 }
@@ -49,7 +49,7 @@ function pull() {
         restore -c "$SYNC_FS" "$SYNC_OUT/$SYNC_FILE"
     done
     cat $SYNC_OUT/sync_links.config | while read SYNC_ONLINE_LINK; do
-        if [ -n "$SYNC_LINK" ]; then
+        if [ -n "$SYNC_ONLINE_LINK" ]; then
             SYNC_LINK=$(echo "$SYNC_ONLINE_LINK" | awk '{print $1}')
             SYNC_FS=$(echo "$SYNC_ONLINE_LINK" | awk '{print $2}')
             restore -l "$SYNC_FS" "$SYNC_OUT/$SYNC_LINK"
