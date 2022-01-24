@@ -4,7 +4,7 @@
 
 function download() {
     if [ -n "$HEADERS" ]; then
-        wget --header="$HEADERS" -U --"Mozilla/5.0" "$1" -O "$2"
+        wget --header="$HEADERS" -U --"Mozilla/5.0" "$1" -O "$2" >/dev/null 2>&1
     else
         wget -U --"Mozilla/5.0" "$1" -O "$2" >/dev/null 2>&1
     fi
