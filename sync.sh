@@ -3,7 +3,11 @@
 # Copyright (C) 2021 MistyRain <1740621736@qq.com>
 
 function download() {
-    wget -U "Mozilla/5.0" "$1" -O "$2" >/dev/null 2>&1
+    if [ -n "$HEADERS" ]; then
+        wget --header="$HEADERS" -U --"Mozilla/5.0" "$1" -O "$2"
+    else
+        wget -U --"Mozilla/5.0" "$1" -O "$2" >/dev/null 2>&1
+    fi
     if [ "$?" = "1" ]; then
         echo "接收途中发现错误，已终止！"
         rm -rf $SYNC_OUT
@@ -22,9 +26,15 @@ function restore() {
 
 function pull() {
     mkdir -p $SYNC_OUT
-    curl -sL "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config"
-    curl -sL "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config"
-    curl -sL "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config"
+    if [ -n "$HEADERS" ]; then
+        curl --header "$HEADERS" -sL "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config"
+        curl --header "$HEADERS" -sL "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config"
+        curl --header "$HEADERS" -sL "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config"
+    else
+        curl -sL "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config"
+        curl -sL "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config"
+        curl -sL "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config"
+    fi
     if [ "$?" = "1" ]; then
         echo "未发现sync_files.config"
         rm -rf $SYNC_OUT
@@ -61,24 +71,24 @@ function pull() {
 function push() {
     if [ -d "$SYNC_DIR" ]; then
         echo -en "正在生成sync.config...\r"
-        true> $SYNC_DIR/sync_dirs.config
-        true> $SYNC_DIR/sync_files.config
-        true> $SYNC_DIR/sync_links.config
+        true >$SYNC_DIR/sync_dirs.config
+        true >$SYNC_DIR/sync_files.config
+        true >$SYNC_DIR/sync_links.config
         for SYNC_FILE in $(find $SYNC_DIR -type d); do
             SYNC_FS=$(stat -c %a $SYNC_FILE)
             FS_CONFIG="$(echo "$SYNC_FILE" | sed "s|$SYNC_DIR/||g") 0$SYNC_FS"
-            echo "$FS_CONFIG" >> $SYNC_DIR/sync_dirs.config
+            echo "$FS_CONFIG" >>$SYNC_DIR/sync_dirs.config
         done
         sed -i '1d' $SYNC_DIR/sync_dirs.config
         for SYNC_FILE in $(find $SYNC_DIR -type f); do
             SYNC_FS=$(stat -c %a $SYNC_FILE)
             FS_CONFIG="$(echo "$SYNC_FILE" | sed "s|$SYNC_DIR/||g") 0$SYNC_FS"
-            echo "$FS_CONFIG" >> $SYNC_DIR/sync_files.config
+            echo "$FS_CONFIG" >>$SYNC_DIR/sync_files.config
         done
         for SYNC_FILE in $(find $SYNC_DIR -type l); do
             SYNC_LINK=$(ls -l $SYNC_FILE | awk '{print $NF}')
             FS_CONFIG="$(echo "$SYNC_FILE" | sed "s|$SYNC_DIR/||g") $SYNC_LINK"
-            echo "$FS_CONFIG" >> $SYNC_DIR/sync_links.config
+            echo "$FS_CONFIG" >>$SYNC_DIR/sync_links.config
         done
         echo -en "正在生成sync.config，完成！\r\n"
     else
@@ -87,6 +97,10 @@ function push() {
     fi
 }
 
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+if [ -f "$PROJECT_DIR/headers.txt" ]; then
+    HEADERS="$(cat $PROJECT_DIR/headers.txt)"
+fi
 if [[ "$1" == "http"* ]]; then
     SYNC_DO="pull"
     SYNC_URL="$1"
