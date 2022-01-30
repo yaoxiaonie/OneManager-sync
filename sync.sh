@@ -93,6 +93,14 @@ function pull() {
         restore -c "$SYNC_FS" "$SYNC_OUT/$SYNC_DIR"
     done
     task
+    while true; do
+        SYNC_PROGRESS=$(find $SYNC_OUT -type f | grep -v "sync_*.config" | wc -l)
+        echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${SYNC_PROGRESS}/${SYNC_NUMBER}）\r"
+        if [ "$(ps -ef | grep -i 'wget' | grep -i "$SYNC_URL" | grep -v 'grep')" = "" ] && [ "$(ps -ef | grep -i 'sync.sh' | grep -v 'grep' | wc -l)" = "2" ]; then
+            break
+        fi
+    done
+    echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${SYNC_PROGRESS}/${SYNC_NUMBER}），完成！\r"
     rm -rf $SYNC_OUT/sync_*.config
 }
 
