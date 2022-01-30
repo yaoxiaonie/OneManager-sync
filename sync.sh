@@ -2,6 +2,48 @@
 
 # Copyright (C) 2021 MistyRain <1740621736@qq.com>
 
+function get() {
+    cat $SYNC_OUT/sync_files_${CREATE_TASK}.config | while read SYNC_ONLINE_FILE; do
+        SYNC_FILE=$(echo "$SYNC_ONLINE_FILE" | awk '{print $1}')
+        SYNC_FS=$(echo "$SYNC_ONLINE_FILE" | awk '{print $2}')
+        download "$SYNC_URL/$SYNC_FILE" "$SYNC_OUT/$SYNC_FILE"
+        restore -c "$SYNC_FS" "$SYNC_OUT/$SYNC_FILE"
+        sed -i '1d' $SYNC_OUT/sync_files_${CREATE_TASK}.config
+    done
+    cat $SYNC_OUT/sync_links_${CREATE_TASK}.config | while read SYNC_ONLINE_LINK; do
+        if [ -n "$SYNC_ONLINE_LINK" ]; then
+            SYNC_LINK=$(echo "$SYNC_ONLINE_LINK" | awk '{print $1}')
+            SYNC_FS=$(echo "$SYNC_ONLINE_LINK" | awk '{print $2}')
+            restore -l "$SYNC_FS" "$SYNC_OUT/$SYNC_LINK"
+            sed -i '1d' $SYNC_OUT/sync_links_${CREATE_TASK}.config
+        fi
+    done
+}
+
+function task() {
+    THREAD_COUNT="16"
+    TASK_COUNT=$(expr "$SYNC_NUMBER" / "$THREAD_COUNT")
+    if [[ "$(expr "$TASK_COUNT" \* "$THREAD_COUNT")" -lt "$SYNC_NUMBER" ]]; then
+        EVERY_TASK_COUNT=$((TASK_COUNT + 1))
+    else
+        EVERY_TASK_COUNT=$TASK_COUNT
+    fi
+    if [ "$TASK_COUNT" = "0" ]; then
+        THREAD_COUNT=$SYNC_NUMBER
+    fi
+    FIRST_LINE="1"
+    FINISH_LINE="$EVERY_TASK_COUNT"
+    for RUN in $(seq 1 $THREAD_COUNT); do
+        sed -n "${FIRST_LINE},${FINISH_LINE}p" $SYNC_OUT/sync_files.config >$SYNC_OUT/sync_files_${RUN}.config
+        sed -n "${FIRST_LINE},${FINISH_LINE}p" $SYNC_OUT/sync_links.config >$SYNC_OUT/sync_links_${RUN}.config
+        FIRST_LINE=$(expr $FIRST_LINE + $EVERY_TASK_COUNT)
+        FINISH_LINE=$(expr $FINISH_LINE + $EVERY_TASK_COUNT)
+    done
+    for CREATE_TASK in $(seq 1 $THREAD_COUNT); do
+        get >/dev/null 2>&1 &
+    done
+}
+
 function download() {
     if [ -n "$HEADERS" ]; then
         wget --header="$HEADERS" -U --"Mozilla/5.0" "$1" -O "$2" >/dev/null 2>&1
@@ -50,22 +92,8 @@ function pull() {
         mkdir -p "$SYNC_OUT/$SYNC_DIR"
         restore -c "$SYNC_FS" "$SYNC_OUT/$SYNC_DIR"
     done
-    cat $SYNC_OUT/sync_files.config | while read SYNC_ONLINE_FILE; do
-        SYNC_FILE=$(echo "$SYNC_ONLINE_FILE" | awk '{print $1}')
-        SYNC_FS=$(echo "$SYNC_ONLINE_FILE" | awk '{print $2}')
-        let SYNC_PROGRESS++
-        echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${SYNC_PROGRESS}/${SYNC_NUMBER}）\r"
-        download "$SYNC_URL/$SYNC_FILE" "$SYNC_OUT/$SYNC_FILE"
-        restore -c "$SYNC_FS" "$SYNC_OUT/$SYNC_FILE"
-    done
-    cat $SYNC_OUT/sync_links.config | while read SYNC_ONLINE_LINK; do
-        if [ -n "$SYNC_ONLINE_LINK" ]; then
-            SYNC_LINK=$(echo "$SYNC_ONLINE_LINK" | awk '{print $1}')
-            SYNC_FS=$(echo "$SYNC_ONLINE_LINK" | awk '{print $2}')
-            restore -l "$SYNC_FS" "$SYNC_OUT/$SYNC_LINK"
-        fi
-    done
-    echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${SYNC_PROGRESS}/${SYNC_NUMBER}），完成！\r"
+    task
+    rm -rf $SYNC_OUT/sync_*.config
 }
 
 function push() {
