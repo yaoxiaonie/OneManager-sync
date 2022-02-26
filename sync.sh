@@ -83,7 +83,7 @@ function pull() {
         exit 1
     fi
     SYNC_PROGRESS="0"
-    SYNC_NUMBER=$(wc -l $SYNC_OUT/sync_files.config | awk '{print $1}')
+    SYNC_NUMBER=$(cat $SYNC_OUT/sync_files.config $SYNC_OUT/sync_links.config | sed '/^ *$/d' | wc -l)
     echo "接收进'${SYNC_OUT}'..."
     echo "正在处理结构树..."
     cat $SYNC_OUT/sync_dirs.config | while read SYNC_ONLINE_DIR; do
@@ -93,14 +93,16 @@ function pull() {
         restore -c "$SYNC_FS" "$SYNC_OUT/$SYNC_DIR"
     done
     task
+    SYNC_PROGRESS="0"
     while true; do
-        SYNC_PROGRESS=$(find $SYNC_OUT -type f | grep -v "sync_*.config" | wc -l)
+        RE_SYNC_PROGRESS=$(cat $SYNC_OUT/sync_files_*.config $SYNC_OUT/sync_links_*.config | sed '/^ *$/d' | awk '{print $1}' | wc -l)
+        SYNC_PROGRESS=$(echo ${SYNC_NUMBER}-${RE_SYNC_PROGRESS} | bc)
         echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${SYNC_PROGRESS}/${SYNC_NUMBER}）\r"
-        if [ "$(ps -ef | grep -i 'wget' | grep -i "$SYNC_URL" | grep -v 'grep')" = "" ] && [ "$(ps -ef | grep -i 'sync.sh' | grep -v 'grep' | wc -l)" = "2" ]; then
+        if [ "$SYNC_PROGRESS" = "$SYNC_NUMBER" ] && [ "$(cat $SYNC_OUT/sync_files_${CREATE_TASK}.config $SYNC_OUT/sync_links_${CREATE_TASK}.config | sed '/^ *$/d')" = "" ]; then
             break
         fi
     done
-    echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${SYNC_PROGRESS}/${SYNC_NUMBER}），完成！\r"
+    echo -en "\n完成！\n"
     rm -rf $SYNC_OUT/sync_*.config
 }
 
