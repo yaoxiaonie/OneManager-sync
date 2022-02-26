@@ -69,9 +69,9 @@ function restore() {
 function pull() {
     mkdir -p $SYNC_OUT
     if [ -n "$HEADERS" ]; then
-        aria2c --header "$HEADERS" "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config" >/dev/null 2>&1
-        aria2c --header "$HEADERS" "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config" >/dev/null 2>&1
-        aria2c --header "$HEADERS" "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config" >/dev/null 2>&1
+        aria2c --header="$HEADERS" "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config" >/dev/null 2>&1
+        aria2c --header="$HEADERS" "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config" >/dev/null 2>&1
+        aria2c --header="$HEADERS" "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config" >/dev/null 2>&1
     else
         aria2c "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config" >/dev/null 2>&1
         aria2c "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config" >/dev/null 2>&1
