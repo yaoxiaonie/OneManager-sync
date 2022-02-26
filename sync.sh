@@ -46,9 +46,9 @@ function task() {
 
 function download() {
     if [ -n "$HEADERS" ]; then
-        wget --header="$HEADERS" -U --"Mozilla/5.0" "$1" -O "$2" >/dev/null 2>&1
+        aria2c --header="$HEADERS" "$1" -o "$2" >/dev/null 2>&1
     else
-        wget -U --"Mozilla/5.0" "$1" -O "$2" >/dev/null 2>&1
+        aria2c "$1" -o "$2" >/dev/null 2>&1
     fi
     if [ "$?" = "1" ]; then
         echo "接收途中发现错误，已终止！"
@@ -69,13 +69,13 @@ function restore() {
 function pull() {
     mkdir -p $SYNC_OUT
     if [ -n "$HEADERS" ]; then
-        curl --header "$HEADERS" -sL "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config"
-        curl --header "$HEADERS" -sL "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config"
-        curl --header "$HEADERS" -sL "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config"
+        aria2c --header "$HEADERS" "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config" >/dev/null 2>&1
+        aria2c --header "$HEADERS" -sL "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config" >/dev/null 2>&1
+        aria2c --header "$HEADERS" -sL "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config" >/dev/null 2>&1
     else
-        curl -sL "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config"
-        curl -sL "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config"
-        curl -sL "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config"
+        aria2c "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config" >/dev/null 2>&1
+        aria2c "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config" >/dev/null 2>&1
+        aria2c "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config" >/dev/null 2>&1
     fi
     if [ "$?" = "1" ]; then
         echo "未发现sync_files.config"
