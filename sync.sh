@@ -118,7 +118,7 @@ function push() {
             echo "$FS_CONFIG" >>$SYNC_DIR/sync_dirs.config
         done
         sed -i '1d' $SYNC_DIR/sync_dirs.config
-        for SYNC_FILE in $(find $SYNC_DIR -type f); do
+        for SYNC_FILE in $(find $SYNC_DIR -type f | sed '/sync_/d'); do
             SYNC_FS=$(stat -c %a $SYNC_FILE)
             FS_CONFIG="$(echo "$SYNC_FILE" | sed "s|$SYNC_DIR/||g") 0$SYNC_FS"
             echo "$FS_CONFIG" >>$SYNC_DIR/sync_files.config
@@ -128,7 +128,8 @@ function push() {
             FS_CONFIG="$(echo "$SYNC_FILE" | sed "s|$SYNC_DIR/||g") $SYNC_LINK"
             echo "$FS_CONFIG" >>$SYNC_DIR/sync_links.config
         done
-        echo -en "正在生成sync.config，完成！\r\n"
+        echo "正在生成sync.config..."
+        echo "完成！"
     else
         echo "参数为空或是错误的参数！"
         exit 1
@@ -164,6 +165,6 @@ push)
     push
     ;;
 *)
-    exit1
+    exit 1
     ;;
 esac
