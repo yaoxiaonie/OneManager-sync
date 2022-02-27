@@ -6,7 +6,7 @@ function get() {
     cat $SYNC_OUT/sync_files_${CREATE_TASK}.config | while read SYNC_ONLINE_FILE; do
         SYNC_FILE=$(echo "$SYNC_ONLINE_FILE" | awk '{print $1}')
         SYNC_FS=$(echo "$SYNC_ONLINE_FILE" | awk '{print $2}')
-        download "$SYNC_URL/$SYNC_FILE" "$SYNC_OUT/$SYNC_FILE"
+        download "$SYNC_URL/$SYNC_FILE" "$SYNC_FILE"
         restore -c "$SYNC_FS" "$SYNC_OUT/$SYNC_FILE"
         sed -i '1d' $SYNC_OUT/sync_files_${CREATE_TASK}.config
     done
@@ -46,9 +46,9 @@ function task() {
 
 function download() {
     if [ -n "$HEADERS" ]; then
-        aria2c --header="$HEADERS" "$1" -o "$2" >/dev/null 2>&1
+        aria2c --header="$HEADERS" "$1" -d "$SYNC_OUT" -o "$2" >/dev/null 2>&1
     else
-        aria2c "$1" -o "$2" >/dev/null 2>&1
+        aria2c "$1" -d "$SYNC_OUT" -o "$2" >/dev/null 2>&1
     fi
     if [ "$?" = "1" ]; then
         echo "接收途中发现错误，已终止！"
@@ -69,13 +69,13 @@ function restore() {
 function pull() {
     mkdir -p $SYNC_OUT
     if [ -n "$HEADERS" ]; then
-        aria2c --header="$HEADERS" "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config" >/dev/null 2>&1
-        aria2c --header="$HEADERS" "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config" >/dev/null 2>&1
-        aria2c --header="$HEADERS" "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config" >/dev/null 2>&1
+        aria2c --header="$HEADERS" "$SYNC_URL/sync_dirs.config" -d "$SYNC_OUT" -o "sync_dirs.config" >/dev/null 2>&1
+        aria2c --header="$HEADERS" "$SYNC_URL/sync_files.config" -d "$SYNC_OUT" -o "sync_files.config" >/dev/null 2>&1
+        aria2c --header="$HEADERS" "$SYNC_URL/sync_links.config" -d "$SYNC_OUT" -o "sync_links.config" >/dev/null 2>&1
     else
-        aria2c -l "$SYNC_URL/sync_dirs.config" -o "$SYNC_OUT/sync_dirs.config" >/dev/null 2>&1
-        aria2c -l "$SYNC_URL/sync_files.config" -o "$SYNC_OUT/sync_files.config" >/dev/null 2>&1
-        aria2c -l "$SYNC_URL/sync_links.config" -o "$SYNC_OUT/sync_links.config" >/dev/null 2>&1
+        aria2c -l "$SYNC_URL/sync_dirs.config" -d "$SYNC_OUT" -o "sync_dirs.config" >/dev/null 2>&1
+        aria2c -l "$SYNC_URL/sync_files.config" -d "$SYNC_OUT" -o "sync_files.config" >/dev/null 2>&1
+        aria2c -l "$SYNC_URL/sync_links.config" -d "$SYNC_OUT" -o "sync_links.config" >/dev/null 2>&1
     fi
     if [ "$?" = "1" ]; then
         echo "未发现sync_files.config"
