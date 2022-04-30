@@ -93,12 +93,15 @@ function pull() {
         restore -c "$SYNC_FS" "$SYNC_OUT/$SYNC_DIR"
     done
     task
-    SYNC_PROGRESS="0"
+    LAST_SYNC_PROGRESS="0"
     while true; do
         RE_SYNC_PROGRESS=$(cat $SYNC_OUT/sync_files_*.config $SYNC_OUT/sync_links_*.config | sed '/^ *$/d' | awk '{print $1}' | wc -l)
-        SYNC_PROGRESS=$(echo ${SYNC_NUMBER}-${RE_SYNC_PROGRESS} | bc)
-        echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${SYNC_PROGRESS}/${SYNC_NUMBER}）\r"
-        if [ "$SYNC_PROGRESS" = "$SYNC_NUMBER" ] && [ "$(cat $SYNC_OUT/sync_files_${CREATE_TASK}.config $SYNC_OUT/sync_links_${CREATE_TASK}.config | sed '/^ *$/d')" = "" ]; then
+        CURRENT_SYNC_PROGRESS=$(echo ${SYNC_NUMBER}-${RE_SYNC_PROGRESS} | bc)
+        if [ "$CURRENT_SYNC_PROGRESS" != "$LAST_SYNC_PROGRESS" ]; then
+            echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${CURRENT_SYNC_PROGRESS}/${SYNC_NUMBER}）\r"
+            LAST_SYNC_PROGRESS="$CURRENT_SYNC_PROGRESS"
+        fi
+        if [ "$CURRENT_SYNC_PROGRESS" = "$SYNC_NUMBER" ] && [ "$(cat $SYNC_OUT/sync_files_${CREATE_TASK}.config $SYNC_OUT/sync_links_${CREATE_TASK}.config | sed '/^ *$/d')" = "" ]; then
             break
         fi
     done
