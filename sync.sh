@@ -98,7 +98,7 @@ function pull() {
         RE_SYNC_PROGRESS=$(cat $SYNC_OUT/sync_files_*.config $SYNC_OUT/sync_links_*.config | sed '/^ *$/d' | awk '{print $1}' | wc -l)
         CURRENT_SYNC_PROGRESS=$(echo ${SYNC_NUMBER}-${RE_SYNC_PROGRESS} | bc)
         if [ "$CURRENT_SYNC_PROGRESS" != "$LAST_SYNC_PROGRESS" ]; then
-            echo -en "接收对象：$(echo $SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${CURRENT_SYNC_PROGRESS}/${SYNC_NUMBER}）\r"
+            echo -en "接收对象：$(echo $CURRENT_SYNC_PROGRESS*100/$SYNC_NUMBER | bc)%（${CURRENT_SYNC_PROGRESS}/${SYNC_NUMBER}）\r"
             LAST_SYNC_PROGRESS="$CURRENT_SYNC_PROGRESS"
         fi
         if [ "$CURRENT_SYNC_PROGRESS" = "$SYNC_NUMBER" ] && [ "$(cat $SYNC_OUT/sync_files_${CREATE_TASK}.config $SYNC_OUT/sync_links_${CREATE_TASK}.config | sed '/^ *$/d')" = "" ]; then
