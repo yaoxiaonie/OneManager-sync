@@ -1,11 +1,11 @@
 # OneManager-sync
 OneManager-sync is a shell script that can clone file like github repo.
-It is only suitable for OneManager's renexmoe theme.
+It is only suitable for OneManager-php's **renexmoe** theme.
 
 # Feature
-Using multithreading to clone.
-Can restore the permission and symlink
-Can use header config
+1.Using multithreading to clone.
+2.Can restore the permission and symlink
+3.Can use header config
 
 ## How to install
 ```
