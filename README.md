@@ -4,8 +4,10 @@ It is only suitable for OneManager-php's **renexmoe** theme.
 
 # Feature
 1.Using multithreading to clone.
-2.Can restore the permission and symlink
-3.Can use header config
+
+2.Can restore the permission and symlink.
+
+3.Can use header config.
 
 ## How to install
 ```
